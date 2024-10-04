@@ -1,9 +1,17 @@
+
 function getTimeString(time){
     const hour = parseInt(time / 3600);
     let remainingSecond = time % 3600;
     const minute = parseInt(remainingSecond / 60);
     remainingSecond = remainingSecond % 60;
     return `${hour} hour ${minute} minute ${remainingSecond} second ago`;
+}
+
+const removeActiveClass =  () => {
+    const buttons = document.getElementsByClassName('category-btn');
+    for(let btn of buttons){
+        btn.classList.remove('active');
+    }
 }
 
 const loadCategories = () => {
@@ -23,7 +31,12 @@ const loadVideos = () => {
 const loadCategoryVideos = (id) => {
     fetch(`https://openapi.programming-hero.com/api/phero-tube/category/${id}`)
         .then((res) => res.json())
-        .then(data => displayVideos(data.category))
+        .then(data => {
+            removeActiveClass();
+            displayVideos(data.category);
+            const activeBtn = document.getElementById(`btn-${id}`);
+            activeBtn.classList.add('active');
+        })
         .catch((error) => console.log(error));
 };
 
@@ -34,13 +47,36 @@ const displayCategories = (categories) => {
 
         const buttonContainer = document.createElement('div');
         buttonContainer.innerHTML = `
-            <button onclick='loadCategoryVideos(${item.category_id})' class='btn'>
+            <button id='btn-${item.category_id}' onclick='loadCategoryVideos(${item.category_id})' class='btn category-btn'>
                 ${item.category}
             </button>
         `
         // button.onclick = () => alert('hello');
         categoryContainer.append(buttonContainer);
     });
+};
+
+const loadDetails = async (videoId) => {
+    const url = `https://openapi.programming-hero.com/api/phero-tube/video/${videoId}`;
+    const res = await fetch (url);
+    const data = await res.json();
+    displayDetails(data.video);
+};
+
+const displayDetails = (video) => {
+    console.log(video);
+    const detailsContainer = document.getElementById('modal-content');
+
+    detailsContainer.innerHTML = `
+        <img src=${video.thumbnail} />
+        <p class='p-1'>${video.description}</p>
+    `
+
+    // way1
+    // document.getElementById('showModalData').click();
+
+    // way2
+    document.getElementById('customModal').showModal();
 };
 
 // const cardDemo = {
@@ -105,7 +141,7 @@ const displayVideos = (videos) => {
                         ${video.authors[0].verified === true ? "<img class=w-5 src='https://img.icons8.com/?size=48&id=D9RtvkuOe31p&format=png'/>" : ""}
                         
                     </div>
-                    <p></p>
+                    <p> <button onclick='loadDetails("${video.video_id}")' class='btn btn-sm btn-error'>Details</button> </p>
                 </div>
             </div>
         `;
